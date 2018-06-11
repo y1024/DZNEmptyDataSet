@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.author        = { "dzenbot" => "iromero@dzen.cl" }
   s.ios.deployment_target   = '6.0'
   s.tvos.deployment_target  = '9.0'
-  s.source        = { :git => "https://github.com/y1024/DZNEmptyDataSet.git", :tag => "v#{s.version}" }
+  s.source        = { :git => "https://github.com/y1024/DZNEmptyDataSet.git",:tag => '1.8.2' }
   s.source_files  = 'Classes', 'Source/**/*.{h,m}'
   s.requires_arc  = true
   s.framework     = "UIKit"
