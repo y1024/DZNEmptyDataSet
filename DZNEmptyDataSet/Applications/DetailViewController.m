@@ -9,7 +9,7 @@
 #import "DetailViewController.h"
 #import "UIColor+Hexadecimal.h"
 
-#import <DZNEmptyDataSet/DZNEmptyDataSet.h>
+#import "UIScrollView+EmptyDataSet.h"
 
 @interface DetailViewController () <DZNEmptyDataSetSource, DZNEmptyDataSetDelegate>
 @property (nonatomic, strong) Application *application;
@@ -47,8 +47,6 @@
     [super viewWillAppear:animated];
     
     [self configureNavigationBar];
-    
-    [self setNeedsStatusBarAppearanceUpdate];
 }
 
 
@@ -58,14 +56,16 @@
 {
     UIColor *barColor = nil;
     UIColor *tintColor = nil;
+    UIStatusBarStyle barstyle = UIStatusBarStyleDefault;
     
     self.navigationController.navigationBar.titleTextAttributes = nil;
-
+    
     switch (self.application.type) {
         case ApplicationType500px:
         {
             barColor = [UIColor colorWithHex:@"242424"];
             tintColor = [UIColor colorWithHex:@"d7d7d7"];
+            barstyle = UIStatusBarStyleLightContent;
             break;
         }
         case ApplicationTypeAirbnb:
@@ -78,6 +78,7 @@
         {
             barColor = [UIColor colorWithHex:@"595959"];
             tintColor = [UIColor whiteColor];
+            barstyle = UIStatusBarStyleLightContent;
             self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: tintColor};
             break;
         }
@@ -91,24 +92,28 @@
         {
             barColor = [UIColor colorWithHex:@"506da8"];
             tintColor = [UIColor whiteColor];
+            barstyle = UIStatusBarStyleLightContent;
             break;
         }
         case ApplicationTypeFancy:
         {
             barColor = [UIColor colorWithHex:@"353b49"];
             tintColor = [UIColor colorWithHex:@"c4c7cb"];
+            barstyle = UIStatusBarStyleLightContent;
             break;
         }
         case ApplicationTypeFoursquare:
         {
             barColor = [UIColor colorWithHex:@"00aeef"];
             tintColor = [UIColor whiteColor];
+            barstyle = UIStatusBarStyleLightContent;
             break;
         }
         case ApplicationTypeInstagram:
         {
             barColor = [UIColor colorWithHex:@"2e5e86"];
             tintColor = [UIColor whiteColor];
+            barstyle = UIStatusBarStyleLightContent;
             break;
         }
         case ApplicationTypeKickstarter:
@@ -121,6 +126,7 @@
         {
             barColor = [UIColor colorWithHex:@"544f49"];
             tintColor = [UIColor colorWithHex:@"fffff2"];
+            barstyle = UIStatusBarStyleLightContent;
             break;
         }
         case ApplicationTypePinterest:
@@ -139,24 +145,28 @@
         {
             barColor = [UIColor colorWithHex:@"00aff0"];
             tintColor = [UIColor whiteColor];
+            barstyle = UIStatusBarStyleLightContent;
             break;
         }
         case ApplicationTypeTumblr:
         {
             barColor = [UIColor colorWithHex:@"2e3e53"];
             tintColor = [UIColor whiteColor];
+            barstyle = UIStatusBarStyleLightContent;
             break;
         }
         case ApplicationTypeTwitter:
         {
             barColor = [UIColor colorWithHex:@"58aef0"];
             tintColor = [UIColor whiteColor];
+            barstyle = UIStatusBarStyleLightContent;
             break;
         }
         case ApplicationTypeVesper:
         {
             barColor = [UIColor colorWithHex:@"5e7d9a"];
             tintColor = [UIColor colorWithHex:@"f8f8f8"];
+            barstyle = UIStatusBarStyleLightContent;
             break;
         }
         case ApplicationTypeVideos:
@@ -169,6 +179,7 @@
         {
             barColor = [UIColor colorWithHex:@"00bf8f"];
             tintColor = [UIColor whiteColor];
+            barstyle = UIStatusBarStyleLightContent;
             break;
         }
         case ApplicationTypeWWDC:
@@ -183,7 +194,6 @@
     }
     
     UIImage *logo = [UIImage imageNamed:[NSString stringWithFormat:@"logo_%@", [self.application.displayName lowercaseString]]];
-    
     if (logo) {
         self.navigationItem.titleView = [[UIImageView alloc] initWithImage:logo];
     }
@@ -194,6 +204,8 @@
     
     self.navigationController.navigationBar.barTintColor = barColor;
     self.navigationController.navigationBar.tintColor = tintColor;
+    
+    [[UIApplication sharedApplication] setStatusBarStyle:barstyle animated:YES];
 }
 
 - (void)configureHeaderAndFooter
@@ -208,49 +220,19 @@
     }
     
     if (imageName) {
-        UIImage *image = [UIImage imageNamed:imageName inBundle:[NSBundle bundleForClass:[self class]] compatibleWithTraitCollection:nil];
-        UIImageView *imageView = [[UIImageView alloc] initWithImage:image];
+        UIImageView *imageView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:imageName]];
         imageView.userInteractionEnabled = YES;
-
+        
         UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didTapHeaderView:)];
         [imageView addGestureRecognizer:tapGesture];
-
-        CGRect frame = self.view.bounds;
-        frame.size.height = image.size.height;
-        UIView *headerView = [[UIView alloc] initWithFrame:frame];
-        headerView.backgroundColor = [UIColor whiteColor];
-
-        imageView.center = CGPointMake(frame.size.width/2.0, frame.size.height/2.0);
-        [headerView addSubview:imageView];
         
-        self.tableView.tableHeaderView = headerView;
+        self.tableView.tableHeaderView = imageView;
     }
     else {
         self.tableView.tableHeaderView = [UIView new];
     }
     
     self.tableView.tableFooterView = [UIView new];
-}
-
-- (UIStatusBarStyle)preferredStatusBarStyle
-{
-    switch (self.application.type) {
-        case ApplicationType500px:
-        case ApplicationTypeCamera:
-        case ApplicationTypeFacebook:
-        case ApplicationTypeFancy:
-        case ApplicationTypeFoursquare:
-        case ApplicationTypeInstagram:
-        case ApplicationTypePath:
-        case ApplicationTypeSkype:
-        case ApplicationTypeTumblr:
-        case ApplicationTypeTwitter:
-        case ApplicationTypeVesper:
-        case ApplicationTypeVine:
-            return UIStatusBarStyleLightContent;
-        default:
-            return UIStatusBarStyleDefault;
-    }
 }
 
 - (void)setAllowShuffling:(BOOL)allow
@@ -290,7 +272,7 @@
 - (Application *)randomApplication
 {
     ApplicationType randomType = arc4random() % ApplicationCount;
-
+    
     NSPredicate *query = [NSPredicate predicateWithFormat:@"type == %d", randomType];
     
     return [[self.applications filteredArrayUsingPredicate:query] firstObject];
@@ -511,6 +493,18 @@
     return [[NSAttributedString alloc] initWithString:text attributes:attributes];
 }
 
+- (UIView *)customViewForEmptyDataSet:(UIScrollView *)scrollView {
+    
+    switch (self.application.type) {
+        case ApplicationTypeCustom:
+        {
+            return [[[NSBundle mainBundle] loadNibNamed:@"CustomEmptyScreen" owner:nil options:nil] firstObject];
+        }
+        default:
+            return nil;
+    }
+}
+
 - (NSAttributedString *)descriptionForEmptyDataSet:(UIScrollView *)scrollView
 {
     NSString *text = nil;
@@ -700,7 +694,7 @@
     if (font) [attributes setObject:font forKey:NSFontAttributeName];
     if (textColor) [attributes setObject:textColor forKey:NSForegroundColorAttributeName];
     if (paragraph) [attributes setObject:paragraph forKey:NSParagraphStyleAttributeName];
-
+    
     NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:text attributes:attributes];
     
     switch (self.application.type) {
@@ -718,15 +712,13 @@
 - (UIImage *)imageForEmptyDataSet:(UIScrollView *)scrollView
 {
     if (self.isLoading) {
-        return [UIImage imageNamed:@"loading_imgBlue_78x78" inBundle:[NSBundle bundleForClass:[self class]] compatibleWithTraitCollection:nil];
+        return [UIImage imageNamed:@"loading_imgBlue_78x78"];
     }
     else {
         NSString *imageName = [[[NSString stringWithFormat:@"placeholder_%@", self.application.displayName] lowercaseString]
                                stringByReplacingOccurrencesOfString:@" " withString:@"_"];
         
-        UIImage *image = [UIImage imageNamed:imageName inBundle:[NSBundle bundleForClass:[self class]] compatibleWithTraitCollection:nil];
-        
-        return image;
+        return [UIImage imageNamed:imageName];
     }
 }
 
@@ -839,9 +831,7 @@
             break;
     }
     
-    UIImage *image = [UIImage imageNamed:imageName inBundle:[NSBundle bundleForClass:[self class]] compatibleWithTraitCollection:nil];
-
-    return [[image resizableImageWithCapInsets:capInsets resizingMode:UIImageResizingModeStretch] imageWithAlignmentRectInsets:rectInsets];
+    return [[[UIImage imageNamed:imageName] resizableImageWithCapInsets:capInsets resizingMode:UIImageResizingModeStretch] imageWithAlignmentRectInsets:rectInsets];
 }
 
 - (UIColor *)backgroundColorForEmptyDataSet:(UIScrollView *)scrollView
@@ -919,7 +909,7 @@
 
 - (BOOL)emptyDataSetShouldAllowScroll:(UIScrollView *)scrollView
 {
-    return YES;
+    return self.application.type != ApplicationTypeCustom;
 }
 
 - (BOOL)emptyDataSetShouldAnimateImageView:(UIScrollView *)scrollView
@@ -943,6 +933,19 @@
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         self.loading = NO;
     });
+}
+
+
+#pragma mark - View Auto-Rotation
+
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations
+{
+    return UIInterfaceOrientationMaskAll;
+}
+
+- (BOOL)shouldAutorotate
+{
+    return NO;
 }
 
 @end

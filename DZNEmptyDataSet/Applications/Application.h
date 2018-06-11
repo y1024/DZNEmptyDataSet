@@ -39,6 +39,7 @@ typedef NS_ENUM(NSUInteger, ApplicationType) {
     ApplicationTypeVine,
     ApplicationTypeWhatsapp,
     ApplicationTypeWWDC,
+    ApplicationTypeCustom,
     
     ApplicationCount // Used for count (27)
 };
@@ -51,8 +52,5 @@ typedef NS_ENUM(NSUInteger, ApplicationType) {
 @property (nonatomic) ApplicationType type;
 
 - (instancetype)initWithDictionary:(NSDictionary *)dict;
-
-+ (NSArray *)applicationsFromJSONAtPath:(NSString *)path;
-+ (NSArray *)applicationsFromJSON:(id)JSON;
 
 @end

@@ -9,11 +9,10 @@
 #import "MainViewController.h"
 #import "UIColor+Hexadecimal.h"
 
-#import <DZNEmptyDataSet/DZNEmptyDataSet.h>
+#import "UIScrollView+EmptyDataSet.h"
 
 @interface MainViewController () <DZNEmptyDataSetSource, DZNEmptyDataSetDelegate>
-@property (nonatomic, strong) NSArray *applications;
-@property (nonatomic, strong) UISearchController *searchController;
+@property (nonatomic, strong) NSMutableArray *applications;
 @end
 
 @implementation MainViewController
@@ -22,8 +21,7 @@
 {
     [super awakeFromNib];
     
-    NSString *path = [[NSBundle mainBundle] pathForResource:@"applications" ofType:@"json"];
-    self.applications = [Application applicationsFromJSONAtPath:path];
+    [self serializeApplications];
 }
 
 #pragma mark - View lifecycle
@@ -32,7 +30,7 @@
 {
     [super viewDidLoad];
     
-    self.title = @"Applications";
+    self.title = @"Popular Applications";
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:NULL];
     
     self.tableView.tableFooterView = [UIView new];
@@ -47,11 +45,11 @@
 {
     [super viewWillAppear:animated];
     
-    // Resets styling
     self.navigationController.navigationBar.titleTextAttributes = nil;
     self.navigationController.navigationBar.barTintColor = [UIColor colorWithHex:@"f8f8f8"];;
     self.navigationController.navigationBar.translucent = NO;
-    self.navigationController.navigationBar.barStyle = UIBarStyleDefault;
+    
+    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleDefault animated:YES];
 }
 
 
@@ -60,13 +58,30 @@
 - (NSArray *)filteredApps
 {
     UISearchBar *searchBar = self.searchDisplayController.searchBar;
-
+    
     if ([searchBar isFirstResponder] && searchBar.text.length > 0)
     {
         NSPredicate *precidate = [NSPredicate predicateWithFormat:@"displayName CONTAINS[cd] %@", searchBar.text];
         return [self.applications filteredArrayUsingPredicate:precidate];
     }
     return self.applications;
+}
+
+
+#pragma mark - Serialization
+
+- (void)serializeApplications
+{
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"applications" ofType:@"json"];
+    NSData *data = [NSData dataWithContentsOfFile:path];
+    NSArray *objects = [[NSJSONSerialization JSONObjectWithData:data options:kNilOptions|NSJSONWritingPrettyPrinted error:nil] mutableCopy];
+    
+    self.applications = [NSMutableArray new];
+    
+    for (NSDictionary *dictionary in objects) {
+        Application *app = [[Application alloc] initWithDictionary:dictionary];
+        [self.applications addObject:app];
+    }
 }
 
 
@@ -108,14 +123,15 @@
     return [UIColor whiteColor];
 }
 
-- (CGFloat)verticalOffsetForEmptyDataSet:(UIScrollView *)scrollView
+- (CGPoint)offsetForEmptyDataSet:(UIScrollView *)scrollView
 {
-    return -64.0;
+    return CGPointMake(0, -64.0);
 }
+
 
 #pragma mark - DZNEmptyDataSetDelegate Methods
 
-- (BOOL)emptyDataSetShouldDisplay:(UIScrollView *)scrollView
+- (BOOL)emptyDataSetShouldShow:(UIScrollView *)scrollView
 {
     return YES;
 }
@@ -137,9 +153,9 @@
 
 - (void)emptyDataSet:(UIScrollView *)scrollView didTapButton:(UIButton *)button
 {
-
+    
     UISearchBar *searchBar = self.searchDisplayController.searchBar;
-
+    
     NSURL *URL = [NSURL URLWithString:[NSString stringWithFormat:@"http://itunes.com/apps/%@", searchBar.text]];
     
     if ([[UIApplication sharedApplication] canOpenURL:URL]) {
@@ -158,7 +174,7 @@
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
     NSInteger rowCount = [self filteredApps].count;
-
+    
     return rowCount;
 }
 
@@ -204,10 +220,6 @@
     DetailViewController *controller = [[DetailViewController alloc] initWithApplication:app];
     controller.applications = self.applications;
     controller.allowShuffling = YES;
-    
-    if ([controller preferredStatusBarStyle] == UIStatusBarStyleLightContent) {
-        self.navigationController.navigationBar.barStyle = UIBarStyleBlack;
-    }
     
     [self.navigationController pushViewController:controller animated:YES];
 }
@@ -275,11 +287,6 @@
 
 
 #pragma mark - View Auto-Rotation
-
-- (UIStatusBarStyle)preferredStatusBarStyle
-{
-    return UIStatusBarStyleDefault;
-}
 
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations
 {
